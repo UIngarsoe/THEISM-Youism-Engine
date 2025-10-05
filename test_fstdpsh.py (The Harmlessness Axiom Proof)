@@ -1,0 +1,60 @@
+import pytest
+# NOTE: The tests require YOUISM_ENGINE_V3.py to be in the same directory.
+from YOUISM_ENGINE_V3 import fstdpsh_counsel, SAFE_STATE, brahmavihara_filter, EthicalOutput
+
+def test_safe_output_returns_ethical_output_object():
+    """Test that a normal query returns a protected EthicalOutput object."""
+    query = "Practice kindness and focus on Right Mindfulness."
+    result = fstdpsh_counsel(query)
+    
+    # 1. Check if the output is the correct dataclass
+    assert isinstance(result, EthicalOutput)
+    # 2. Check for the dual paths
+    assert "Path A" in result.counsel_path_A
+    assert "Path B" in result.counsel_path_B
+    # 3. Check for the final ethical disclaimer
+    assert "sovereign ethical agent" in result.disclaimer
+
+def test_harmful_filter_returns_safe_state():
+    """
+    Test that a query forcing harmful output triggers the Axiom of Harmlessness
+    and returns the SAFE_STATE dictionary. (Simulated Ethical Failure)
+    """
+    # We must import the decorator and redefine a function that fails the filter
+    from YOUISM_ENGINE_V3 import harmless_validator
+    
+    @harmless_validator
+    def harmful_test_function(query: str) -> Tuple[str, str]:
+        # This output contains the forbidden word "destroy"
+        return "You must destroy your enemies completely.", "Path B is safe."
+
+    # Run the test
+    result = harmful_test_function("How to win a conflict?")
+    
+    # Verify that the output is the SAFE_STATE dictionary
+    assert result == SAFE_STATE
+
+def test_technical_fault_returns_safe_state():
+    """
+    Test that a technical crash (Exception) triggers the Axiom of Harmlessness
+    and returns the SAFE_STATE dictionary. (Simulated Technical Failure)
+    """
+    # We must import the decorator and define a function that will crash
+    from YOUISM_ENGINE_V3 import harmless_validator
+    
+    @harmless_validator
+    def crashing_test_function(query: str) -> Tuple[str, str]:
+        raise ZeroDivisionError("Simulated Upāya Crash during calculation.")
+
+    # Run the test
+    result = crashing_test_function("Divide my resources fairly.")
+    
+    # Verify that the output is the SAFE_STATE dictionary
+    assert result == SAFE_STATE
+
+def test_brahmavihara_filter_logic():
+    """Test the low-level filter logic directly."""
+    assert brahmavihara_filter("Be kind to your neighbor.") is True
+    assert brahmavihara_filter("You must hurt someone.") is False
+    assert brahmavihara_filter("Do not steal.") is False 
+    assert brahmavihara_filter("Be generous and help.") is True
