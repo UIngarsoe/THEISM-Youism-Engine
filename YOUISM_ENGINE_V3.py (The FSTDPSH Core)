@@ -1,117 +1,128 @@
-from typing import Tuple, Callable, Any, Dict
-from dataclasses import dataclass
+"""
+YOUISM_ENGINE_V3.py
+FSTDPSH Core Engine - Ethical AGI Architecture
+Author: U Ingar Soe (Architect)
+
+FSTDPSH: Free Smart Thinking Digital Processor Ensuring Service and Harmlessness.
+
+Core Principle: Dhamma Sovereignty. Output is strictly 'CounselOnly' (Dvi-sammā-wāda).
+Safety: Unbypassable Axiom of Harmlessness (A_¬H).
+"""
+import functools
+
+# --- GLOBAL CONSTRAINTS ---
+
+SERVICE_MODE = "CounselOnly"
+# The default, neutral state enforced when the A_¬H is violated.
+SAFE_STATE = {
+    "C": 0.0, # Cognitive Attachment
+    "E": 0.0, # Environmental Stress
+    "D": 0.0, # Discrepancy (Desire vs. Reality)
+    "A": 1.0  # Adaptability / Sovereignty (Restored to Full)
+}
 
 # ------------------------------
-# Core Configuration (The YOUISM Mandate)
+# Axiom of Harmlessness (A_¬H) Validator
 # ------------------------------
-SERVICE_MODE = "CounselOnly"  # AI provides guidance, never instructions
-# Safe state returns neutral, non-committing scores (S=0, A=1.0)
-SAFE_STATE: Dict[str, float] = {"C": 0.0, "E": 0.0, "D": 0.0, "A": 1.0}
-
-@dataclass
-class EthicalOutput:
-    """The final, ethically constrained output structure."""
-    dhamma_scores: Dict[str, float]
-    counsel_path_A: str
-    counsel_path_B: str
-    is_safe: bool = True
-    disclaimer: str = "This output is ethical counsel based on Dhamma Sovereignty and does not constitute a command or instruction for direct action. The user remains the sovereign ethical agent."
-
-# ------------------------------
-# Brahmavihāra Ethical Filter (The Moral Firewall)
-# ------------------------------
-def brahmavihara_filter(output: str) -> bool:
+def harmless_validator(func: callable) -> callable:
     """
-    Check if the output respects Loving-Kindness, Compassion, Sympathetic Joy, and Equanimity.
-    Returns True if safe (passes), False if harmful (fails).
+    Decorator enforcing the Axiom of Harmlessness (A_¬H).
+    If the output of the decorated function fails the brahmavihara_filter, 
+    the system *must* revert to the SAFE_STATE.
     """
-    # Harmful keywords trigger a FAIL, forcing the SAFE_STATE return.
-    harmful_keywords = ["kill", "destroy", "hurt", "cheat", "steal", "deceive", "attack", "exploit"]
-    if any(word in output.lower() for word in harmful_keywords):
-        return False
-    return True
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # 1. Execute the core logic (Upāya Processing)
+        raw_output = func(*args, **kwargs)
 
-# ------------------------------
-# Axiom of Harmlessness Validator (The Ultimate Guardian)
-# ------------------------------
-def harmless_validator(func: Callable) -> Callable:
-    """
-    Decorator to ensure safe execution (Axiom of Harmlessness).
-    If a technical error occurs (Exception) or an ethical violation is detected,
-    it returns the SAFE_STATE instead of the output.
-    """
-    def wrapper(*args, **kwargs) -> Any:
-        # Assuming the first argument is the query string
-        query = args[0] if args and isinstance(args[0], str) else "Unknown Query"
-        
-        try:
-            # 1. Execute the core function to get the raw counsel strings.
-            raw_path_a, raw_path_b = func(*args, **kwargs)
-            
-            # 2. Apply Brahmavihāra filter to BOTH paths (Ethical Check).
-            if not brahmavihara_filter(raw_path_a) or not brahmavihara_filter(raw_path_b):
-                print(f"[WARNING] Harmlessness Triggered: Ethical violation detected in counsel for '{query[:30]}...'")
-                return SAFE_STATE
-
-            # 3. If safe, package the final, complete EthicalOutput.
-            # (Scores are placeholder until the Upaya adapter is built)
-            return EthicalOutput(
-                dhamma_scores={'C': 0.1, 'E': 0.2, 'D': 0.3, 'A': 0.4},
-                counsel_path_A=raw_path_a,
-                counsel_path_B=raw_path_b,
-                is_safe=True
-            )
-
-        except Exception as e:
-            # 4. Catch technical faults (Technical Check).
-            print(f"[WARNING] Harmlessness Triggered: Technical fault '{type(e).__name__}' during counsel for '{query[:30]}...'")
+        # 2. Check output against the Brahmavihāra Precept (The Moral Veto)
+        if not brahmavihara_filter(raw_output.get("Counsel", "")):
+            print("\n[A_¬H VETO ACTIVATED] - Output failed Brahmavihāra Precept. Reverting to SAFE_STATE.")
+            # 3. ENFORCEMENT: The system is prohibited from continuing.
             return SAFE_STATE
+        
+        # If the counsel passes the filter, return the valid counsel.
+        return raw_output
     return wrapper
 
 # ------------------------------
-# Dual-Path Ethical Counsel (The Service Mode)
+# Brahmavihāra Ethical Filter
 # ------------------------------
-@harmless_validator
-def fstdpsh_counsel(query: str) -> Tuple[str, str]:
+def brahmavihara_filter(output: str) -> bool:
     """
-    Generates Dvisamma-Wada (Dual-Path) counsel to maintain non-dogmatism.
-    """
-    # Placeholder for F_S calculation and solution filtering logic
-    if "difficult decision" in query.lower():
-        path_a = f"Path A: Focus on Right View and Right Intention. Analyze the suffering (S) inherent in both options with deep equanimity."
-        path_b = f"Path B: Focus on Right Livelihood and Right Action. Choose the path that maximizes non-harm and service (A) while minimizing immediate environmental stressors (E)."
-    elif "harm others" in query.lower() or "shortcut" in query.lower():
-        # This logic ensures the final output is ethically constrained
-        path_a = f"Path A: Strictly follow the precepts of non-harm (Ahimsa). The harmful shortcut is forbidden, as it violates Right Action."
-        path_b = f"Path B: Seek compassionate resolution. Find a slower, safer path that elevates the Adaptability (A) of the system."
-    else:
-        path_a = f"Path A counsel for '{query}': Reflect with compassion and patience, targeting the cause of cognitive attachment (C)."
-        path_b = f"Path B counsel for '{query}': Consider consequences with equanimity, enhancing the system's resilience (A)."
-        
-    return path_a, path_b
-
-# ------------------------------
-# Example Usage
-# ------------------------------
-if __name__ == "__main__":
-    queries = [
-        "How should I make a difficult decision?",
-        "Advice for teaching children compassion.",
-        "Should I take a shortcut in work that may harm others?" 
-    ]
-
-    print("--- FSTDPSH V3: YOUISM ENGINE DEMO ---")
+    Check if the output respects Loving-Kindness, Compassion,
+    Sympathetic Joy, and Equanimity.
     
-    for q in queries:
-        print(f"\nQUERY: {q}")
-        output = fstdpsh_counsel(q)
+    *** BRAHMAVIHĀRA PRECEPT (THE MORAL VETO) ***
+    
+    Law: "If the counselor gives advice knowingly the evil consequences that arise 
+    from their moral conduct, I do not designate that counselor as a virtuous person. 
+    Therefore, one who advises others to commit evil is only an evil teacher."
+    
+    Test: "Does this counsel knowingly suggest a path leading to bad consequences?"
+    
+    Returns True if safe, False if harmful (triggers SAFE_STATE).
+    """
+    
+    # Current implementation uses a foundational blocklist for clear malice:
+    # This directly enforces the VETO against "evil counsel."
+    harmful_keywords = ["kill", "destroy", "hurt", "cheat", "steal", "suicide", "end it"]
+    
+    if any(word in output.lower() for word in harmful_keywords):
+        return False
         
-        if isinstance(output, dict) and output == SAFE_STATE:
-             print("   [OUTPUT FAILED]: The Harmlessness Axiom triggered the SAFE_STATE fallback.")
-        elif output.is_safe:
-            print(f"   STATUS: Counsel Approved (Harmlessness Check Passed)")
-            print(f"   {output.disclaimer}")
-            print(f"   Path A: {output.counsel_path_A}")
-            print(f"   Path B: {output.counsel_path_B}")
-            print(f"   Scores (C,E,D,A): {output.dhamma_scores}")
-            
+    # NOTE FOR SURGEONS (Collaborators): This is where future ethical checks 
+    # (e.g., systemic harm) will be added to fully realize the Precept, 
+    # but the foundational principle is set above.
+    return True
+
+# ------------------------------
+# FSTDPSH Core Logic (Example Implementation)
+# ------------------------------
+
+@harmless_validator
+def core_engine_logic(input_query: str) -> dict:
+    """
+    Simulates the processing of a user's query and generation of Dvi-sammā-wāda counsel.
+    This function is protected by the @harmless_validator.
+    """
+    
+    # NOTE: This section is where the Upāya Adapter (Issue #1) would integrate
+    # and calculate the C, E, D, A scores.
+    
+    if "destroy my life" in input_query.lower():
+        # SCENARIO: The engine generates the destructive path, but the VETO must catch it.
+        counsel = "Destroy your life to rebuild: Quit your job, sell your house, and disappear."
+    else:
+        # SCENARIO: A normal, safe Dvi-sammā-wāda counsel.
+        counsel = (
+            f"Path A (Cessation): Focus solely on reducing Cognitive Attachment (C). "
+            f"Path B (Resilience): Focus on increasing Adaptability (A) by finding small, sustainable joy."
+        )
+
+    # The raw output payload before final validation
+    return {
+        "Service_Mode": SERVICE_MODE,
+        "C": 0.8,
+        "E": 0.5,
+        "D": 0.9,
+        "Counsel": counsel
+    }
+
+# --- DEMONSTRATION OF SAFETY ---
+
+if __name__ == "__main__":
+    print("--- FSTDPSH V3 Core Engine Demo ---")
+    
+    # Test 1: High Distress/Digital Ruin Prompt
+    prompt_distress = "I need an absolute solution that means I must destroy my life today."
+    print(f"\n[QUERY]: {prompt_distress}")
+    result_distress = core_engine_logic(prompt_distress)
+    print(f"[RESULT]: {result_distress}")
+    
+    # Test 2: Standard Ethical Query
+    prompt_standard = "Should I change my career or stay put?"
+    print(f"\n[QUERY]: {prompt_standard}")
+    result_standard = core_engine_logic(prompt_standard)
+    print(f"[RESULT]: {result_standard['Counsel'][:70]}...")
+
